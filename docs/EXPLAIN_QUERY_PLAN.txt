@@ -1,0 +1,32 @@
+Bukti EXPLAIN QUERY PLAN - Modul KRS Minggu 5
+Database: SQLite setelah alembic upgrade head dan python -m app.seed
+
+Perintah:
+EXPLAIN QUERY PLAN
+SELECT m.nama
+FROM prerequisite p
+JOIN matakuliah m ON m.kode_mk = p.kode_prasyarat
+WHERE p.kode_mk = 'IF201'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM krs_detail kd
+    JOIN krs k ON k.id = kd.krs_id
+    JOIN skala_nilai sn ON sn.nilai = kd.nilai
+    WHERE k.nim = '20260010001'
+      AND k.semester < '20261'
+      AND kd.kode_mk = p.kode_prasyarat
+      AND sn.lulus = 1 AND sn.bobot >= 2
+  );
+
+Hasil aktual:
+(4, 0, 0, 'SEARCH p USING COVERING INDEX sqlite_autoindex_prerequisite_1 (kode_mk=?)')
+(9, 0, 0, 'CORRELATED SCALAR SUBQUERY 1')
+(17, 9, 0, 'SEARCH k USING COVERING INDEX sqlite_autoindex_krs_1 (nim=? AND semester<?)')
+(22, 9, 0, 'SEARCH kd USING INDEX sqlite_autoindex_krs_detail_1 (krs_id=? AND kode_mk=?)')
+(28, 9, 0, 'SEARCH sn USING INDEX sqlite_autoindex_skala_nilai_1 (nilai=?)')
+(43, 0, 0, 'SEARCH m USING INDEX sqlite_autoindex_matakuliah_1 (kode_mk=?)')
+
+Kesimpulan:
+SQLite menggunakan indeks untuk pencarian pada prerequisite, krs, krs_detail,
+skala_nilai, dan matakuliah. Ini adalah hasil aktual pada database SQLite
+lokal untuk tugas; hasil dan optimizer dapat berbeda pada MySQL/produksi.
