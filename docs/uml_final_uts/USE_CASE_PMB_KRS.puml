@@ -1,0 +1,68 @@
+﻿@startuml
+title Use Case Diagram SIAKAD - Modul PMB dan KRS
+
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+actor "Calon Mahasiswa" as Calon
+actor "Admin PMB" as Admin
+actor "Mahasiswa" as Mhs
+actor "Dosen PA" as Dosen
+
+rectangle "Sistem Informasi Akademik (SIAKAD)" {
+
+  package "Modul PMB" #EAF3FF {
+    usecase "Registrasi PMB" as UC1
+    usecase "Lihat Status PMB" as UC2
+    usecase "Setujui Pendaftaran" as UC3
+    usecase "Tolak Pendaftaran" as UC4
+    usecase "Lihat Statistik PMB" as UC5
+    usecase "Generate NIM" as UC6
+  }
+
+  package "Modul KRS" #EAF8EE {
+    usecase "Tambah Mata Kuliah" as UC7
+    usecase "Hapus Mata Kuliah" as UC8
+    usecase "Validasi KRS" as UC9
+    usecase "Ajukan KRS" as UC10
+    usecase "Setujui KRS" as UC11
+    usecase "Minta Revisi KRS" as UC12
+    usecase "Lihat Detail KRS" as UC13
+  }
+}
+
+Calon --> UC1
+Calon --> UC2
+
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+
+Mhs --> UC7
+Mhs --> UC8
+Mhs --> UC9
+Mhs --> UC10
+Mhs --> UC13
+
+Dosen --> UC11
+Dosen --> UC12
+Dosen --> UC13
+
+UC3 ..> UC6 : <<include>>
+UC10 ..> UC9 : <<include>>
+UC11 ..> UC9 : <<include>>
+
+note bottom of UC6
+  NIM dibuat ketika pendaftaran
+  berhasil disetujui.
+end note
+
+note bottom of UC11
+  Identitas aktor KRS saat ini
+  disimulasikan melalui header API.
+  Belum menggunakan autentikasi produksi.
+end note
+
+@enduml

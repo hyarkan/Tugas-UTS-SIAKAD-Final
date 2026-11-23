@@ -1,0 +1,191 @@
+﻿@startuml
+title Class Diagram SIAKAD - Modul PMB dan KRS
+left to right direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+hide empty methods
+
+package "Modul PMB" #EAF3FF {
+  enum StatusPMB {
+    pending
+    approve
+    rejected
+  }
+
+  class CalonMahasiswa {
+    +id: int
+    +nama_lengkap: str
+    +email: str
+    +phone: str
+    +tanggal_lahir: date
+    +alamat: str
+    +program_studi_id: int
+    +jalur_masuk_id: int
+    +status: StatusPMB
+    +nim: str?
+    +created_at: datetime
+    +approve_at: datetime?
+  }
+
+  class ProgramStudi {
+    +id: int
+    +kode: str
+    +nama: str
+    +fakultas: str
+  }
+
+  class JalurMasuk {
+    +id: int
+    +nama: str
+  }
+
+  class NIMCounter {
+    +tahun: int
+    +kode_prodi: str
+    +last_number: int
+  }
+
+  class PMBService <<service>> {
+    +register_candidate()
+    +generate_nim()
+    +approve_candidate()
+    +reject_candidate()
+    +get_candidate_status()
+    +get_pmb_stats()
+  }
+
+  ProgramStudi "1" -- "0..*" CalonMahasiswa : program studi
+  JalurMasuk "1" -- "0..*" CalonMahasiswa : jalur masuk
+  CalonMahasiswa --> StatusPMB : status
+  PMBService ..> CalonMahasiswa : mengelola
+  PMBService ..> NIMCounter : menerbitkan NIM
+}
+
+package "Modul KRS" #EAF8EE {
+  enum KRSStatus {
+    draft
+    submitted
+    approved
+    revision
+  }
+
+  class KRS {
+    +id: int
+    +nim: str
+    +semester: str
+    +status: str
+    +dosen_pa_id: int?
+    +version: int
+    +submitted_at: datetime?
+    +approved_at: datetime?
+    +revision_note: str?
+    +check_transition()
+    +transition()
+  }
+
+  class KRSDetail {
+    +id: int
+    +krs_id: int
+    +kode_mk: str
+    +kelas_id: int?
+    +nilai: str?
+  }
+
+  class MataKuliah {
+    +kode_mk: str
+    +nama: str
+    +sks: int
+    +hari: int
+    +jam_mulai: time
+    +jam_selesai: time
+  }
+
+  class SkalaNilai {
+    +nilai: str
+    +bobot: Decimal
+    +lulus: bool
+  }
+
+  class KRSLog {
+    +id: int
+    +krs_id: int
+    +actor_role: str
+    +actor_id: str
+    +action: str
+    +from_status: str
+    +to_status: str
+  }
+
+  class KRSNotification {
+    +id: int
+    +krs_id: int
+    +recipient_nim: str
+    +message: str
+    +is_read: bool
+  }
+
+  class KRSManager <<service>> {
+    +add_course()
+    +remove_course()
+    +validate_krs()
+    +submit_krs()
+    +approve_krs()
+    +revise_krs()
+  }
+
+  class ValidationResult
+
+  class KRSContext
+
+  abstract class Validator {
+    +next_validator: Validator?
+    +set_next()
+    +validate(context: KRSContext): ValidationResult
+    +check(context: KRSContext): ValidationResult
+  }
+
+  Validator ..> KRSContext : menerima konteks
+  Validator ..> ValidationResult : menghasilkan
+
+  class DuplicateValidator
+  class SKSValidator
+  class PrerequisiteValidator
+  class ConflictValidator
+
+  KRS "1" *-- "0..*" KRSDetail : details
+  MataKuliah "1" -- "0..*" KRSDetail : mata kuliah
+  MataKuliah "0..*" -- "0..*" MataKuliah : prasyarat
+  KRS "1" -- "0..*" KRSLog : riwayat
+  KRS "1" -- "0..*" KRSNotification : notifikasi
+  KRSDetail "0..*" --> "0..1" SkalaNilai : nilai
+  KRS --> KRSStatus : aturan status
+
+  Validator <|-- DuplicateValidator
+  Validator <|-- SKSValidator
+  Validator <|-- PrerequisiteValidator
+  Validator <|-- ConflictValidator
+
+  KRSManager ..> KRS : mengelola
+  KRSManager ..> Validator : menjalankan validasi
+}
+
+CalonMahasiswa "1" -- "0..*" KRS : nim
+
+note bottom of NIMCounter
+  Counter berdasarkan tahun dan kode prodi.
+  Tidak memiliki foreign key langsung
+  ke CalonMahasiswa.
+end note
+
+note bottom of PMBService
+  Representasi konseptual fungsi
+  pada pmb_service.py,
+  bukan class Python aktual.
+end note
+
+@enduml
+

@@ -1,0 +1,132 @@
+﻿@startuml
+title Sequence Diagram KRS - Pengisian, Pengajuan, dan Persetujuan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Mahasiswa" as Mhs
+actor "Dosen PA" as Dosen
+participant "KRS Router\n(FastAPI)" as Router
+participant "KRSManager\n(krs_service.py)" as Manager
+participant "Validator Chain\n(krs_validators.py)" as Validator
+database "Database" as DB
+
+== Menambahkan Mata Kuliah ==
+
+Mhs -> Router : POST /api/krs/{nim}/{semester}/courses
+activate Router
+Router -> Manager : add_course(nim, kode_mk)
+activate Manager
+
+Manager -> DB : Periksa mahasiswa, KRS,\nstatus, tunggakan SPP dan mata kuliah
+DB --> Manager : Hasil pemeriksaan
+
+alt Tidak memenuhi persyaratan
+    Manager --> Router : Error sesuai kondisi
+    Router --> Mhs : HTTP 4xx
+else Persyaratan terpenuhi
+    Manager -> Validator : validate(context)
+    activate Validator
+
+    note right of Validator
+      DuplicateValidator
+      SKSValidator
+      PrerequisiteValidator
+      ConflictValidator
+    end note
+
+    Validator --> Manager : ValidationResult
+    deactivate Validator
+
+    alt Validasi gagal
+        Manager --> Router : KRSValidationError
+        Router --> Mhs : HTTP 400
+    else Validasi berhasil
+        Manager -> DB : Simpan KRSDetail
+        DB --> Manager : Commit berhasil
+        Manager --> Router : KRSDetail
+        Router --> Mhs : HTTP 201 Created
+    end
+end
+
+deactivate Manager
+deactivate Router
+
+== Mengajukan KRS ==
+
+Mhs -> Router : POST /api/krs/{nim}/{semester}/submit
+activate Router
+Router -> Manager : submit_krs(nim, actor_nim, expected_version)
+activate Manager
+
+Manager -> DB : Kunci KRS dan periksa\nkepemilikan, SPP, versi dan status
+DB --> Manager : Data KRS
+
+alt Pemeriksaan gagal
+    Manager --> Router : Error sesuai kondisi
+    Router --> Mhs : HTTP 4xx
+else Pemeriksaan berhasil
+    Manager -> Validator : Validasi seluruh mata kuliah
+    activate Validator
+    Validator --> Manager : Daftar hasil validasi
+    deactivate Validator
+
+    alt KRS kosong atau tidak valid
+        Manager --> Router : KRSValidationError
+        Router --> Mhs : HTTP 400
+    else KRS valid
+        Manager -> Manager : Transisi draft/revision ke submitted
+        Manager -> DB : Simpan status, KRSLog,\ndan KRSNotification
+        DB --> Manager : Commit berhasil
+        Manager --> Router : KRS submitted
+        Router --> Mhs : HTTP 200 OK
+    end
+end
+
+deactivate Manager
+deactivate Router
+
+== Persetujuan Dosen PA ==
+
+Dosen -> Router : POST /api/krs/{nim}/{semester}/approve
+activate Router
+Router -> Manager : approve_krs(nim, actor_id, expected_version)
+activate Manager
+
+Manager -> DB : Kunci KRS dan periksa\nDosen PA, versi dan status
+DB --> Manager : Data KRS
+
+alt Dosen tidak berwenang atau konflik versi/status
+    Manager --> Router : Error sesuai kondisi
+    Router --> Dosen : HTTP 4xx
+else Pemeriksaan berhasil
+    Manager -> Validator : Validasi ulang KRS
+    activate Validator
+    Validator --> Manager : Hasil validasi
+    deactivate Validator
+
+    alt KRS tidak valid
+        Manager --> Router : KRSValidationError
+        Router --> Dosen : HTTP 400
+    else KRS valid
+        Manager -> Manager : Transisi submitted ke approved
+        Manager -> DB : Simpan status, KRSLog,\ndan KRSNotification
+        DB --> Manager : Commit berhasil
+        Manager --> Router : KRS approved
+        Router --> Dosen : HTTP 200 OK
+    end
+end
+
+deactivate Manager
+deactivate Router
+
+note over Mhs,Dosen
+  Identitas aktor disimulasikan melalui header API.
+  Sistem belum menggunakan autentikasi produksi.
+  Notifikasi disimpan di database,
+  bukan dikirim sebagai email eksternal.
+end note
+
+@enduml

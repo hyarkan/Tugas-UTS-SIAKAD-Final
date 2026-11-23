@@ -1,0 +1,86 @@
+﻿@startuml
+title Sequence Diagram PMB - Registrasi dan Persetujuan
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Calon Mahasiswa" as Calon
+actor "Admin PMB" as Admin
+participant "PMB Router\n(FastAPI)" as Router
+participant "PMB Service\n(pmb_service.py)" as Service
+database "Database" as DB
+
+== Registrasi PMB ==
+
+Calon -> Router : POST /api/pmb/register
+activate Router
+
+Router -> Service : register_candidate(db, payload)
+activate Service
+
+Service -> DB : Periksa email terdaftar
+DB --> Service : Hasil pemeriksaan
+
+alt Email sudah digunakan
+    Service --> Router : EmailAlreadyRegistered
+    Router --> Calon : HTTP 409 Conflict
+else Email tersedia
+    Service -> DB : Validasi program studi dan jalur masuk
+    DB --> Service : Hasil referensi
+
+    alt Referensi tidak valid
+        Service --> Router : InvalidReference
+        Router --> Calon : HTTP 400 Bad Request
+    else Referensi valid
+        Service -> DB : Simpan calon mahasiswa\nstatus = pending
+        DB --> Service : Data tersimpan
+        Service --> Router : CalonMahasiswa
+        Router --> Calon : HTTP 201 Created\nstatus = pending
+    end
+end
+
+deactivate Service
+deactivate Router
+
+== Persetujuan PMB ==
+
+Admin -> Router : PUT /api/pmb/{candidate_id}/approve
+activate Router
+
+Router -> Service : approve_candidate(db, candidate_id)
+activate Service
+
+Service -> DB : Kunci transaksi dan cari pendaftar
+DB --> Service : Data pendaftar
+
+alt Pendaftar tidak ditemukan
+    Service --> Router : CandidateNotFound
+    Router --> Admin : HTTP 404 Not Found
+else Status rejected
+    Service --> Router : CandidateStateConflict
+    Router --> Admin : HTTP 409 Conflict
+else Sudah berstatus approve
+    Service --> Router : Data dan NIM yang sama
+    Router --> Admin : HTTP 200 OK
+else Status pending
+    Service -> Service : generate_nim(db, candidate, tahun)
+    Service -> DB : Baca dan perbarui NIMCounter
+    DB --> Service : Nomor urut NIM
+    Service -> DB : Simpan NIM, status approve,\ndan approve_at dalam transaksi
+    DB --> Service : Commit berhasil
+    Service --> Router : CalonMahasiswa dengan NIM
+    Router --> Admin : HTTP 200 OK
+end
+
+deactivate Service
+deactivate Router
+
+note over Admin,Router
+  Aktor Admin PMB bersifat konseptual.
+  Diagram tidak menyatakan autentikasi
+  admin sudah diterapkan.
+end note
+
+@enduml
