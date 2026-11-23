@@ -1,0 +1,42 @@
+.venv/
+__pycache__/
+*.py[cod]
+.env
+*.db
+
+.coverage
+.pytest_cache/
+htmlcov/
+
+*.egg-info/
+.hypothesis/
+
+# Backup dan file sementara
+*.backup_*.md
+*.log
+*.zip
+
+# Database tambahan
+*.sqlite
+*.sqlite3
+
+# File kredensial dan private key
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dokumentasi khusus pengumpulan Minggu 6
+PROJECT_MINGGU6.txt
+# File sementara editor dan sistem
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+# File backup lokal
+*_backup.py
+*_BACKUP_*.md
+*.bak
+
+# PlantUML lokal (diagram sumber dan SVG tetap dilacak)
+tools/plantuml.jar
