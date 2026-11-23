@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transkrip Akademik - {{ t.nim }}</title>
+  <style>
+    @page { size: A4; margin: 15mm 14mm 20mm; }
+    * { box-sizing: border-box; }
+    body {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 24px;
+      color: #17263b;
+      background: #fff;
+      font: 12px/1.5 Arial, Helvetica, sans-serif;
+    }
+    header {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      align-items: center;
+      gap: 14px;
+      border-bottom: 3px solid #16436b;
+      padding-bottom: 14px;
+    }
+    .header-text { min-width: 0; text-align: center; }
+    .logo {
+      display: block;
+      width: 76px;
+      height: 76px;
+      flex: 0 0 76px;
+      object-fit: contain;
+    }
+    .institution {
+      margin: 0;
+      color: #16436b;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      line-height: 1.3;
+    }
+    h1 { margin: 4px 0 0; font-size: 21px; letter-spacing: 1px; line-height: 1.2; }
+    h2 { margin: 22px 0 8px; color: #16436b; font-size: 14px; }
+    .sub { margin: 4px 0 0; color: #596579; font-size: 10px; font-weight: 700; line-height: 1.3; }
+    .info {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 5px 12px;
+      margin: 18px 0 20px;
+    }
+    .info-value { overflow-wrap: anywhere; }
+    .note { color: #596579; font-size: 10px; }
+    table { width: 100%; margin: 8px 0 14px; border-collapse: collapse; table-layout: fixed; }
+    th, td {
+      border: 1px solid #ccd5df;
+      padding: 7px;
+      text-align: left;
+      overflow-wrap: anywhere;
+      vertical-align: top;
+    }
+    th { background: #eaf0f6; color: #16436b; }
+    td.num { text-align: right; }
+    .course-table th:nth-child(1) { width: 13%; }
+    .course-table th:nth-child(2) { width: 31%; }
+    .course-table th:nth-child(3) { width: 8%; }
+    .course-table th:nth-child(4) { width: 9%; }
+    .course-table th:nth-child(5) { width: 11%; }
+    .course-table th:nth-child(6) { width: 28%; }
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 20px;
+      padding: 11px 14px;
+      border: 1px solid #16436b;
+      background: #eaf0f6;
+      color: #16436b;
+      font-size: 13px;
+    }
+    .summary p { margin: 0; }
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      margin-top: 28px;
+      padding-top: 12px;
+      border-top: 1px solid #bcc9d5;
+    }
+    .sign { min-width: 210px; text-align: center; }
+    .sign-space { height: 68px; }
+    .simulation { color: #8a2c2c; }
+    thead { display: table-header-group; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+    @media print {
+      body { max-width: none; margin: 0; padding: 0; }
+      .semester { break-inside: auto; }
+      .summary, footer { break-inside: avoid; }
+    }
+    @media screen and (max-width: 640px) {
+      body { margin: 0; padding: 14px; }
+      header { grid-template-columns: 58px minmax(0, 1fr); gap: 10px; }
+      .logo { width: 58px; height: 58px; flex-basis: 58px; }
+      .institution { font-size: 12px; }
+      h1 { font-size: 17px; }
+      .summary, footer { flex-direction: column; }
+      .info { grid-template-columns: 110px minmax(0, 1fr); }
+      table { font-size: 10px; }
+      th, td { padding: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="{{ logo_src }}" alt="Logo Institut Sains dan Teknologi Nasional">
+    <div class="header-text">
+      <p class="institution">INSTITUT SAINS DAN TEKNOLOGI NASIONAL (ISTN)</p>
+      <h1>TRANSKRIP AKADEMIK</h1>
+      <p class="sub simulation">SIMULASI AKADEMIK — BUKAN DOKUMEN RESMI</p>
+    </div>
+  </header>
+
+  <div class="info">
+    <b>NIM</b><span class="info-value">{{ t.nim }}</span>
+    <b>Nama Lengkap</b><span class="info-value">{{ t.nama }}</span>
+    <b>Program Studi</b><span class="info-value">{{ t.program_studi }}</span>
+    <b>Fakultas</b><span class="info-value">{{ t.fakultas }}</span>
+    <b>Angkatan</b><span class="info-value">{{ t.angkatan }}</span>
+  </div>
+  {% if t.angkatan and t.angkatan != 'Belum tersedia' and t.get('angkatan_dari_nim', true) %}
+    <p class="note">Angkatan diperkirakan dari empat digit awal NIM, bukan data akademik terverifikasi.</p>
+  {% endif %}
+
+  {% for s in t.semester %}
+    <section class="semester">
+      <h2>Semester {{ s.semester }} · IPS {{ s.ips }}</h2>
+      <table class="course-table">
+        <thead>
+          <tr>
+            <th>Kode MK</th><th>Nama Mata Kuliah</th><th>SKS</th>
+            <th>Nilai</th><th>Mutu</th><th>Dihitung dalam IPK</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in s.mata_kuliah %}
+            <tr>
+              <td>{{ m.kode_mk }}</td>
+              <td>{{ m.nama_mk }}</td>
+              <td class="num">{{ m.sks }}</td>
+              <td>{{ m.nilai or '—' }}</td>
+              <td class="num">{{ m.mutu or '—' }}</td>
+              <td>{{ 'Ya' if m.dihitung_ipk else 'Tidak' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  {% else %}
+    <p>Belum ada KRS approved atau nilai akademik.</p>
+  {% endfor %}
+
+  <div class="summary">
+    <p><b>Total SKS Lulus: {{ t.total_sks_lulus }}</b></p>
+    <p><b>IPK: {{ t.ipk }}</b></p>
+  </div>
+
+  <h2>Riwayat Perubahan Nilai</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Waktu</th><th>Kode MK</th><th>Sebelum</th>
+        <th>Sesudah</th><th>Pengubah</th><th>Alasan</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in t.riwayat_perubahan %}
+        <tr>
+          <td>{{ h.changed_at }}</td><td>{{ h.kode_mk }}</td>
+          <td>{{ h.old_value or '—' }}</td><td>{{ h.new_value }}</td>
+          <td>{{ h.dosen_nama }}</td><td>{{ h.reason or '—' }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">Belum ada perubahan nilai.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <footer>
+    <div>
+      <b>Predikat: {{ t.predikat }}</b>
+      <p class="note">{{ t.catatan }}</p>
+    </div>
+    <div class="sign">
+      <b>Dekan</b>
+      <div class="sign-space"></div>
+      (____________________________)
+      <p class="note">Nama dan tanda tangan resmi belum tersedia — simulasi.</p>
+    </div>
+  </footer>
+</body>
+</html>
