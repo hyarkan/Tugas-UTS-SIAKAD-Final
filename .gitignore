@@ -40,3 +40,6 @@ Thumbs.db
 
 # PlantUML lokal (diagram sumber dan SVG tetap dilacak)
 tools/plantuml.jar
+
+# Output from legacy report generators
+artifacts/generated/
