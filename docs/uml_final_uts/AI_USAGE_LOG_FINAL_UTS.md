@@ -1,4 +1,4 @@
-﻿# AI Usage Log - Final UTS SIAKAD
+# AI Usage Log - Final UTS SIAKAD
 
 ## 1. Tujuan Penggunaan AI
 
@@ -115,3 +115,59 @@ sesuai kondisi proyek sebenarnya.
 - docs/ADR-002-krs-state-transactions.md.
 - docs/uml_final_uts/ (source dan hasil diagram).
 - Hasil pengujian Pytest pada salinan proyek UTS.
+
+---
+
+## Penyempurnaan Dokumentasi Final UTS
+
+### Tujuan Penggunaan AI
+
+AI digunakan sebagai asisten untuk membantu penyempurnaan
+dokumentasi Final UTS SIAKAD dengan fokus pada tiga cakupan:
+
+1. Modul Penerimaan Mahasiswa Baru (PMB).
+2. Modul Kartu Rencana Studi (KRS).
+3. Perancangan UML Sistem Informasi Akademik.
+
+### Aktivitas dan Hasil Penyempurnaan
+
+| Aktivitas | Bantuan AI | Hasil |
+|---|---|---|
+| Revisi laporan UML | Penyempurnaan materi, timeline, struktur dan tata letak | Laporan PDF 16 halaman |
+| Revisi ADR | Pengembangan pembahasan arsitektur, SOLID, design patterns, alternatif dan trade-off | ADR PDF 5 halaman |
+| Sinkronisasi ADR Markdown | Penyelarasan keputusan arsitektur dan batasan implementasi | 12 bagian utama |
+| Sinkronisasi dokumentasi UML | Pengembangan penjelasan PMB, KRS dan empat diagram UML | 12 bagian utama |
+| Verifikasi dokumentasi | Bantuan penyusunan perintah PowerShell dan pemeriksaan output | Empat dokumen revisi teridentifikasi |
+
+### Validasi dan Pengawasan Mahasiswa
+
+Mahasiswa menentukan ruang lingkup revisi, memberikan
+referensi format, meninjau hasil penyempurnaan PDF,
+dan menjalankan perintah verifikasi melalui VS Code.
+
+Referensi eksternal digunakan sebagai inspirasi struktur
+penyajian, bukan sebagai sumber klaim implementasi proyek.
+
+Isi dokumentasi disesuaikan dengan karakteristik proyek
+SIAKAD, aturan bisnis, dan implementasi yang dikembangkan.
+
+### Integritas Teknis
+
+Penyempurnaan ini berfokus pada dokumentasi dan tidak
+mengubah kode aplikasi maupun empat diagram UML utama.
+
+Hasil 195 pengujian lulus merupakan bukti verifikasi
+sebelum push awal, bukan hasil pengujian baru pada
+saat revisi dokumentasi.
+
+Tidak ada klaim persentase code coverage tanpa
+pengukuran yang mendukung.
+
+### Tanggung Jawab Akhir
+
+AI berperan sebagai alat bantu penyusunan, penyempurnaan,
+dan pemeriksaan dokumentasi.
+
+Mahasiswa tetap bertanggung jawab atas pemahaman materi,
+validasi hasil, keputusan akhir, serta penjelasan proyek
+dalam video presentasi Final UTS.
