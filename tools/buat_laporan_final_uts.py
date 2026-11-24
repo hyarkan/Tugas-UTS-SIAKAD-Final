@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from xml.sax.saxutils import escape
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, PageBreak,
@@ -12,7 +12,10 @@ from reportlab.lib.units import mm
 from svglib.svglib import svg2rlg
 
 ROOT = Path("docs/uml_final_uts")
-OUTPUT = Path("artifacts/final_uts/LAPORAN_UML_FINAL_UTS_SIAKAD.pdf")
+# Legacy report generator.
+# Does not reproduce the revised Final UTS PDF.
+# Output is separated to protect approved documents.
+OUTPUT = Path("artifacts/generated/LAPORAN_UML_LEGACY.pdf")
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 
 styles = getSampleStyleSheet()

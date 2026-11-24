@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 from xml.sax.saxutils import escape
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
@@ -14,7 +14,10 @@ from svglib.svglib import svg2rlg
 from PIL import Image
 
 BASE = Path("docs/uml_final_uts")
-OUTPUT = Path("artifacts/final_uts/LAPORAN_UML_FINAL_UTS_SIAKAD_PROFESIONAL.pdf")
+# Legacy report generator.
+# Does not reproduce the revised Final UTS PDF.
+# Output is separated to protect approved documents.
+OUTPUT = Path("artifacts/generated/LAPORAN_UML_PROFESIONAL_LEGACY.pdf")
 LOGO = Path("app/static/images/logo_istn.png")
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 
