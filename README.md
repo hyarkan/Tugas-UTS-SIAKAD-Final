@@ -10,7 +10,7 @@
 **Institusi:** Institut Sains dan Teknologi Nasional (ISTN)  
 **Jenis pengumpulan:** Ujian Tengah Semester (UTS) — proyek SIAKAD
 
-> **Fokus penilaian UTS:** perancangan UML (Class, Use Case, Sequence PMB dan Sequence KRS), penjelasan implementasi PMB/KRS, dokumentasi proses penggunaan AI, keputusan arsitektur (ADR), serta presentasi video. Modul Minggu 7–12 menjadi bukti kelanjutan dan integrasi proyek.
+> **Fokus utama Final UTS:** Modul Penerimaan Mahasiswa Baru (PMB), Modul Kartu Rencana Studi (KRS), dan proses perancangan UML Sistem Informasi Akademik (SIAKAD). Ketiga cakupan tersebut didokumentasikan melalui laporan final UML, keputusan arsitektur (ADR), AI Usage Log, repository GitHub, dan video presentasi. Modul Minggu 7–12 menjadi pelengkap pengembangan sistem terintegrasi.
 
 **Navigasi:** [Pendahuluan](#1-pendahuluan) · [Perjalanan Minggu 1–12](#2-perjalanan-pengembangan-minggu-112) · [Fitur](#3-fitur-dan-aturan-bisnis) · [UML](#4-perancangan-uml-final-uts) · [Arsitektur](#5-arsitektur-teknologi-dan-struktur-proyek) · [Instalasi](#6-instalasi-menjalankan-dan-menguji) · [Dokumentasi](#7-dokumentasi-pendukung-dan-batasan) · [Pengumpulan](#8-pengumpulan-final-uts)
 
@@ -37,6 +37,16 @@ Agar kronologi mudah diikuti, tugas dikelompokkan menurut fase. Detail teknis se
 | **Minggu 9–10** | Nilai dan transkrip akademik | Input dan riwayat nilai, perhitungan IPS/IPK menggunakan Decimal, kebijakan nilai, serta tampilan dan ekspor transkrip HTML/PDF. |
 | **Minggu 11–12** | Keuangan dan presensi | Tagihan SPP, pembayaran manual/webhook simulasi, pemeriksaan tunggakan sebelum KRS, dashboard keuangan, QR JWT presensi, validasi sesi, laporan Excel, dan analitik berbasis aturan. |
 | **Final UTS** | Konsolidasi perancangan dan pembuktian implementasi | Empat diagram UML, laporan PDF, penjelasan PMB/KRS, ADR, AI Usage Log, pengujian, repository, dan video penjelasan. |
+
+**Prioritas pembahasan Final UTS:**
+
+| Cakupan utama | Tahapan | Hasil |
+|---|---|---|
+| Modul PMB | Minggu 3–4 | Registrasi, validasi, persetujuan dan penerbitan NIM |
+| Modul KRS | Minggu 5–6 | Validasi akademik, pengajuan, persetujuan dan revisi KRS |
+| Perancangan UML SIAKAD | Final UTS | Class Diagram, Use Case Diagram, Sequence PMB dan Sequence KRS |
+
+Minggu 1–2 menjadi fondasi perancangan, sedangkan Minggu 7–12 merupakan pengembangan pelengkap yang menunjukkan integrasi antarmodul.
 
 **Catatan kronologi:** tahap Minggu 1–2 merupakan fase desain dari materi perkuliahan; pengembangan kode aplikasi terdokumentasi terutama mulai Minggu 3. Pengelompokan Minggu 3–4 merangkum perkembangan PMB, bukan klaim bahwa semua fitur selesai sekaligus pada Minggu 3.
 
@@ -106,12 +116,12 @@ Empat diagram utama disimpan sebagai **PlantUML (`.puml`)** yang dapat diedit da
 
 **Dokumen inti UTS:**
 
-- **[Laporan UML Final UTS — PDF](artifacts/final_uts/LAPORAN_UML_FINAL_UTS_SIAKAD.pdf)** — dokumen laporan final.
+- **[Laporan UML Final UTS — PDF](artifacts/final_uts/LAPORAN_UML_FINAL_UTS_SIAKAD.pdf)** — laporan final 16 halaman yang mencakup timeline pengembangan, implementasi PMB/KRS, empat diagram UML, keputusan desain, dan bukti pengujian.
 
-**Dokumen keputusan arsitektur:** [ADR Final UTS (PDF)](artifacts/final_uts/ADR_FINAL_UTS_SIAKAD.pdf)
-- **[Penjelasan UML Final UTS](docs/uml_final_uts/PENJELASAN_UML_FINAL_UTS.md)** — uraian diagram dan hubungan dengan implementasi.
-- **[ADR Final UTS](docs/uml_final_uts/ADR_FINAL_UTS.md)** — pertimbangan keputusan arsitektur.
-- **[AI Usage Log Final UTS](docs/uml_final_uts/AI_USAGE_LOG_FINAL_UTS.md)** — dokumentasi penggunaan AI dan peninjauan manual.
+- **[ADR Final UTS (PDF)](artifacts/final_uts/ADR_FINAL_UTS_SIAKAD.pdf)** — dokumen 5 halaman yang membahas arsitektur, SOLID, design patterns, alternatif desain, trade-off, mitigasi, dan matriks keputusan.
+- **[Penjelasan UML Final UTS](docs/uml_final_uts/PENJELASAN_UML_FINAL_UTS.md)** — dokumentasi 12 bagian yang membahas cakupan UTS, timeline, implementasi PMB/KRS, empat diagram UML, dan keterkaitan arsitektur.
+- **[ADR Final UTS](docs/uml_final_uts/ADR_FINAL_UTS.md)** — dokumentasi 12 bagian mengenai keputusan arsitektur, alternatif desain, trade-off, mitigasi, dan batasan implementasi.
+- **[AI Usage Log Final UTS](docs/uml_final_uts/AI_USAGE_LOG_FINAL_UTS.md)** — dokumentasi penggunaan AI, peninjauan manual, serta penyempurnaan dokumentasi Final UTS.
 
 **Batas interpretasi UML:** diagram merupakan dokumentasi desain yang direkonstruksi dan disesuaikan terhadap kode yang berkembang. Beberapa elemen diagram dapat bersifat konseptual. Misalnya, fungsi layanan PMB pada implementasi tidak seluruhnya dibungkus dalam kelas `PMBService`; jangan menganggap setiap kotak UML adalah kelas Python yang identik. Diagram juga tidak membuktikan adanya autentikasi produksi atau entitas `User`/`Admin` yang terpisah bila belum diimplementasikan.
 
@@ -194,7 +204,7 @@ Akses **Swagger UI**: `http://127.0.0.1:8000/docs` atau **ReDoc**: `http://127.0
 python -m pytest -q
 ```
 
-**Hasil verifikasi Final UTS terakhir yang dilaporkan:** `195 passed, 1 warning` pada lingkungan lokal. Angka tersebut merupakan hasil pengujian pada saat verifikasi, bukan jaminan bahwa setiap lingkungan selalu menghasilkan angka yang sama. Peringatan yang tercatat terkait deprecation Starlette/TestClient. Untuk coverage (jika plugin tersedia):
+**Hasil verifikasi sebelum push awal Final UTS:** `195 passed, 1 warning` pada lingkungan lokal. Angka tersebut merupakan hasil pengujian pada saat verifikasi, bukan jaminan bahwa setiap lingkungan selalu menghasilkan angka yang sama. Peringatan yang tercatat terkait deprecation Starlette/TestClient. Untuk coverage (jika plugin tersedia):
 
 ```powershell
 python -m pytest --cov=app --cov-report=term-missing
@@ -249,14 +259,14 @@ Dokumen ini disiapkan sebagai halaman depan repository untuk memudahkan dosen me
 
 | Komponen | Tautan / status | Keterangan |
 |---|---|---|
-| **1. Laporan Final UML (PDF)** | **[Buka laporan PDF](artifacts/final_uts/LAPORAN_UML_FINAL_UTS_SIAKAD.pdf)** | Berisi perancangan Class, Use Case, Sequence PMB, dan Sequence KRS. |
+| **1. Laporan Final UML (PDF)** | **[Buka laporan PDF](artifacts/final_uts/LAPORAN_UML_FINAL_UTS_SIAKAD.pdf)** | Laporan 16 halaman mencakup PMB, KRS, timeline, perancangan empat diagram UML, dan pembahasan implementasi. |
 | **2. Video penjelasan YouTube** | **Belum ditambahkan** | Tautan diisi setelah rekaman, penyuntingan, dan publikasi video. |
-| **3. Repository GitHub Final UTS** | [Buka Repository GitHub](https://github.com/hyarkan/Tugas-UTS-SIAKAD-Final) | Repository resmi proyek Final UTS SIAKAD; kode dan dokumentasi akan tersedia setelah push pertama. |
+| **3. Repository GitHub Final UTS** | [Buka Repository GitHub](https://github.com/hyarkan/Tugas-UTS-SIAKAD-Final) | Repository resmi proyek Final UTS SIAKAD yang telah dipublikasikan, berisi kode, diagram UML, dokumentasi, dan riwayat pengembangan. |
 
-**Dokumentasi tambahan:** [ADR Final UTS](docs/uml_final_uts/ADR_FINAL_UTS.md) · [AI Usage Log UTS](docs/uml_final_uts/AI_USAGE_LOG_FINAL_UTS.md) · [Penjelasan UML](docs/uml_final_uts/PENJELASAN_UML_FINAL_UTS.md).
+**Dokumentasi tambahan:** [ADR PDF (5 halaman)](artifacts/final_uts/ADR_FINAL_UTS_SIAKAD.pdf) · [ADR Markdown](docs/uml_final_uts/ADR_FINAL_UTS.md) · [AI Usage Log UTS](docs/uml_final_uts/AI_USAGE_LOG_FINAL_UTS.md) · [Penjelasan UML](docs/uml_final_uts/PENJELASAN_UML_FINAL_UTS.md).
 
-**Checklist sebelum mengirim EdLink:** pastikan seluruh tautan dapat dibuka oleh dosen, PDF final benar, video memperlihatkan proses dan penjelasan dengan suara/kamera sesuai instruksi, repository berisi kode dan dokumentasi tanpa kredensial, serta riwayat commit menggambarkan pekerjaan yang benar-benar dilakukan. **ADR PDF satu halaman terpisah wajib disiapkan** sesuai instruksi Final UTS sebelum pengumpulan dinyatakan lengkap.
+**Checklist sebelum mengirim EdLink:** pastikan seluruh tautan dapat dibuka oleh dosen, PDF final benar, video memperlihatkan proses dan penjelasan dengan suara/kamera sesuai instruksi, repository berisi kode dan dokumentasi tanpa kredensial, serta riwayat commit menggambarkan pekerjaan yang benar-benar dilakukan. **ADR PDF terpisah telah disiapkan dalam 5 halaman** sebagai dokumentasi pendukung keputusan arsitektur. Kelengkapan pengumpulan tetap mengikuti instruksi resmi dosen.
 
 ---
 
-**Status dokumen:** README utama untuk Final UTS SIAKAD. Tautan YouTube dan GitHub akan dilengkapi setelah publikasi; dokumentasi Minggu 1–12 tetap dipertahankan sebagai riwayat pengembangan, bukan sebagai pengganti laporan UTS.
+**Status dokumen:** README utama Final UTS SIAKAD. Laporan UML terdiri atas 16 halaman dan ADR terdiri atas 5 halaman. Repository GitHub telah dipublikasikan. Tautan YouTube akan ditambahkan setelah video dipublikasikan. Dokumentasi Minggu 1–12 tetap dipertahankan sebagai riwayat pengembangan.
