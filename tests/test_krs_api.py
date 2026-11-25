@@ -3,8 +3,10 @@ from app.models import (CalonMahasiswa, StatusPMB, MataKuliah, SkalaNilai,
                         KRS, KRSDetail, prerequisite)
 
 
+# Header ini mewakili identitas mahasiswa pada endpoint demo; test menggunakannya untuk pemeriksaan kepemilikan KRS.
 STUDENT_HEADERS = {"X-Actor-Role": "mahasiswa", "X-Actor-NIM": "20260010001"}
 
+# Fixture helper menyiapkan mahasiswa approved, katalog dengan jadwal bervariasi, skala nilai, dan satu prasyarat.
 def setup_student_and_catalog(db_session):
     student = CalonMahasiswa(
         nama_lengkap="Muhamad Arkan Maulana", email="arkan.krs@example.com",
@@ -38,6 +40,7 @@ def setup_student_and_catalog(db_session):
     return student
 
 
+# Mata kuliah yang valid dapat ditambahkan dan response mengembalikan kode mata kuliah.
 def test_add_course_creates_draft_krs(client, db_session):
     setup_student_and_catalog(db_session)
     response = client.post("/api/krs/20260010001/20261/courses", json={"kode_mk": "SI101"}, headers=STUDENT_HEADERS)
@@ -45,6 +48,7 @@ def test_add_course_creates_draft_krs(client, db_session):
     assert response.json()["kode_mk"] == "SI101"
 
 
+# Mata kuliah berprasyarat ditolak jika mata kuliah pendahulunya belum lulus atau belum tercatat.
 def test_add_course_without_prerequisite_is_rejected(client, db_session):
     setup_student_and_catalog(db_session)
     response = client.post("/api/krs/20260010001/20261/courses", json={"kode_mk": "IF201"}, headers=STUDENT_HEADERS)
@@ -52,6 +56,7 @@ def test_add_course_without_prerequisite_is_rejected(client, db_session):
     assert "Algoritma" in response.json()["detail"]
 
 
+# Kode mata kuliah yang sama tidak boleh ditambahkan dua kali pada KRS yang sama.
 def test_duplicate_course_is_rejected(client, db_session):
     setup_student_and_catalog(db_session)
     url = "/api/krs/20260010001/20261/courses"
@@ -61,6 +66,7 @@ def test_duplicate_course_is_rejected(client, db_session):
     assert "sudah ada" in response.json()["detail"]
 
 
+# Konflik jadwal ditentukan dari irisan interval waktu, bukan hanya kesamaan jam mulai.
 def test_overlapping_interval_is_rejected(client, db_session):
     setup_student_and_catalog(db_session)
     url = "/api/krs/20260010001/20261/courses"
@@ -71,6 +77,7 @@ def test_overlapping_interval_is_rejected(client, db_session):
     assert "bentrok" in response.json()["detail"].lower()
 
 
+# Dua kelas yang bertemu tepat pada batas waktu tanpa irisan tetap boleh dipilih.
 def test_adjacent_schedule_is_allowed(client, db_session):
     setup_student_and_catalog(db_session)
     url = "/api/krs/20260010001/20261/courses"
@@ -79,6 +86,8 @@ def test_adjacent_schedule_is_allowed(client, db_session):
     assert client.post(url, json={"kode_mk": "SI101"}, headers=STUDENT_HEADERS).status_code == 201
 
 
+# >>> FOKUS PRESENTASI UTS <<<
+# Batas 24 SKS diterima; penambahan berikutnya yang menaikkan total menjadi 27 SKS harus ditolak.
 def test_total_sks_limit_24_is_allowed_but_27_rejected(client, db_session):
     setup_student_and_catalog(db_session)
     # Add 8 unique 3-SKS courses directly as a fixture to reach 24 SKS.
@@ -103,6 +112,7 @@ def test_total_sks_limit_24_is_allowed_but_27_rejected(client, db_session):
     assert "27" in response.json()["detail"]
 
 
+# Penghapusan mengurangi total SKS dan endpoint validasi melaporkan kondisi KRS sesudah perubahan.
 def test_remove_course_and_validate_endpoint(client, db_session):
     setup_student_and_catalog(db_session)
     url = "/api/krs/20260010001/20261/courses"
@@ -116,6 +126,7 @@ def test_remove_course_and_validate_endpoint(client, db_session):
     assert client.get("/api/krs/20260010001/20261").json()["total_sks"] == 0
 
 
+# Nilai C yang berstatus lulus pada semester sebelumnya memenuhi prasyarat IF201.
 def test_prerequisite_with_grade_c_in_previous_semester_passes(client, db_session):
     student = setup_student_and_catalog(db_session)
     previous = KRS(nim=student.nim, semester="20252", status="approved")

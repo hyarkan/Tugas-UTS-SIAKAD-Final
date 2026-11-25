@@ -9,6 +9,7 @@ from app.main import app
 from app.models import Base, JalurMasuk, ProgramStudi
 
 
+# Database in-memory membuat state tiap test terisolasi; StaticPool menjaga satu koneksi SQLite untuk fixture.
 @pytest.fixture()
 def db_session():
     engine = create_engine(
@@ -17,6 +18,7 @@ def db_session():
         poolclass=StaticPool,
     )
 
+    # SQLite tidak mengaktifkan foreign key secara default, jadi setiap koneksi test menyalakan pemeriksaan relasi.
     @event.listens_for(engine, "connect")
     def enable_foreign_keys(connection, record):
         cursor = connection.cursor()
@@ -25,6 +27,7 @@ def db_session():
 
     TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     Base.metadata.create_all(bind=engine)
+    # create_all tidak membuat trigger database; fixture memasang guard dan audit history yang dibutuhkan test nilai.
     with engine.begin() as conn:
         conn.execute(text("""
             CREATE TABLE grade_audit_context (
@@ -93,6 +96,7 @@ def db_session():
             JOIN dosen d ON d.id = gh.changed_by
         """))
     db = TestingSessionLocal()
+    # Data program studi dan jalur masuk menjadi referensi tetap untuk request PMB.
     db.add_all([
         ProgramStudi(kode="001", nama="Sistem Informasi", fakultas="FSTI"),
         ProgramStudi(kode="002", nama="Teknik Informatika", fakultas="FSTI"),
@@ -108,6 +112,7 @@ def db_session():
         engine.dispose()
 
 
+# TestClient diarahkan ke sesi database fixture dan dependency override dibersihkan setelah test selesai.
 @pytest.fixture()
 def client(db_session):
     def override_get_db():
@@ -119,6 +124,7 @@ def client(db_session):
     app.dependency_overrides.clear()
 
 
+# Payload valid ini dipakai ulang agar setiap test hanya mengubah field yang sedang diuji.
 @pytest.fixture()
 def register_data():
     return {

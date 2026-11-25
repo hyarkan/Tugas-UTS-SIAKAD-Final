@@ -5,12 +5,14 @@ from app.models import (CalonMahasiswa, StatusPMB, MataKuliah, SkalaNilai, KRS,
                         KRSDetail, KRSLog, KRSNotification, KRSStatus)
 from app.services.krs_service import KRSForbidden, TransitionError
 
+# Konstanta dan header berikut menyiapkan aktor mahasiswa serta dosen PA untuk alur submit dan approval.
 NIM = "20260010001"
 SEMESTER = "20261"
 STUDENT_HEADERS = {"X-Actor-Role": "mahasiswa", "X-Actor-NIM": NIM}
 LECTURER_HEADERS = {"X-Actor-Role": "dosen_pa", "X-Actor-Id": "501"}
 
 
+# Data dasar Minggu 6 berisi mahasiswa approved, mata kuliah, dan skala nilai untuk menjalankan workflow KRS.
 def setup_week6(db):
     student = CalonMahasiswa(nama_lengkap="Arkan", email="arkan.week6@example.com",
         phone="081234567890", tanggal_lahir=date(2007, 2, 11), alamat="Depok",
@@ -38,6 +40,7 @@ def assign_pa(db):
     return krs
 
 
+# KRS kosong tidak dapat diajukan dan status draft harus tetap utuh setelah request gagal.
 def test_submit_empty_krs_is_rejected(client, db_session):
     setup_week6(db_session)
     krs = KRS(nim=NIM, semester=SEMESTER, status="draft", dosen_pa_id=501)
@@ -48,6 +51,8 @@ def test_submit_empty_krs_is_rejected(client, db_session):
     assert db_session.query(KRS).filter_by(nim=NIM).one().status == "draft"
 
 
+# >>> FOKUS PRESENTASI UTS <<<
+# Submit lalu approval memverifikasi transisi status, waktu approval, KRSLog, dan notifikasi dalam alur transaksi.
 def test_submit_approve_is_atomic_and_creates_log_notification(client, db_session):
     setup_week6(db_session)
     assert add_valid_course(client).status_code == 201
@@ -65,6 +70,7 @@ def test_submit_approve_is_atomic_and_creates_log_notification(client, db_sessio
     assert db_session.query(KRSNotification).filter_by(recipient_nim=NIM).count() == 2
 
 
+# Dosen PA yang tidak berwenang menerima 403 dan tidak mengubah status KRS submitted.
 def test_wrong_pa_gets_403_and_does_not_change_krs(client, db_session):
     setup_week6(db_session)
     add_valid_course(client)
@@ -78,6 +84,8 @@ def test_wrong_pa_gets_403_and_does_not_change_krs(client, db_session):
     assert db_session.query(KRS).filter_by(nim=NIM).one().status == "submitted"
 
 
+# >>> FOKUS PRESENTASI UTS <<<
+# Version lama setelah perubahan data ditolak dengan 409 untuk mencegah lost update (optimistic locking).
 def test_stale_version_gets_409(client, db_session):
     setup_week6(db_session)
     add_valid_course(client)
@@ -91,6 +99,7 @@ def test_stale_version_gets_409(client, db_session):
     assert response.status_code == 409
 
 
+# Revisi menyimpan catatan dan mengembalikan KRS ke jalur pengajuan ulang oleh mahasiswa.
 def test_revise_requires_note_and_student_can_resubmit(client, db_session):
     setup_week6(db_session)
     add_valid_course(client)
@@ -108,6 +117,7 @@ def test_revise_requires_note_and_student_can_resubmit(client, db_session):
     assert resubmit.json()["status"] == "submitted"
 
 
+# NIM aktor yang berbeda dari pemilik path ditolak saat mencoba menambahkan mata kuliah.
 def test_other_student_cannot_add_course(client, db_session):
     setup_week6(db_session)
     response = client.post(f"/api/krs/{NIM}/{SEMESTER}/courses", json={"kode_mk": "MA101"},
@@ -115,6 +125,7 @@ def test_other_student_cannot_add_course(client, db_session):
     assert response.status_code == 403
 
 
+# Matriks state machine membentuk semua kombinasi asal, tujuan, dan aktor untuk membedakan transisi legal.
 STATES = ["draft", "submitted", "approved", "revision"]
 ACTORS = ["mahasiswa", "dosen_pa", "sistem"]
 LEGAL_TRANSITIONS = [
@@ -130,6 +141,8 @@ ILLEGAL_TRANSITIONS = [case for case in ALL_TRANSITIONS if case not in LEGAL_TRA
 assert len(ALL_TRANSITIONS) == 48 and len(ILLEGAL_TRANSITIONS) == 42
 
 
+# >>> FOKUS PRESENTASI UTS <<<
+# Enam kombinasi yang diizinkan harus mengubah status tepat ke state tujuan.
 @pytest.mark.parametrize("source,target,actor", LEGAL_TRANSITIONS)
 def test_six_legal_state_transitions(source, target, actor):
     krs = KRS(nim=NIM, semester=SEMESTER, status=source)
@@ -137,6 +150,7 @@ def test_six_legal_state_transitions(source, target, actor):
     assert krs.status == target
 
 
+# Empat state dan tiga aktor menghasilkan 48 kombinasi; 42 transisi ilegal harus ditolak tanpa mengubah state asal.
 @pytest.mark.parametrize("source,target,actor", ILLEGAL_TRANSITIONS)
 def test_each_of_42_illegal_state_transitions_is_rejected(source, target, actor):
     krs = KRS(nim=NIM, semester=SEMESTER, status=source)

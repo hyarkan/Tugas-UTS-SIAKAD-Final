@@ -1,21 +1,25 @@
+# Helper memastikan registrasi awal berhasil dan mengembalikan data calon untuk skenario berikutnya.
 def register(client, data):
     response = client.post("/api/pmb/register", json=data)
     assert response.status_code == 201
     return response.json()
 
 
+# Registrasi menyimpan pendaftar dalam status pending; NIM belum diberikan sebelum approval.
 def test_register_success(client, register_data):
     result = register(client, register_data)
     assert result["status"] == "pending"
     assert result["nim"] is None
 
 
+# Email yang sudah terdaftar ditolak sebagai konflik agar satu alamat tidak membuat pendaftar ganda.
 def test_register_duplicate_email(client, register_data):
     register(client, register_data)
     response = client.post("/api/pmb/register", json=register_data)
     assert response.status_code == 409
 
 
+# Format telepon salah ditolak oleh validasi request (422), sedangkan referensi database tidak valid diuji berikutnya.
 def test_register_invalid_phone(client, register_data):
     register_data["phone"] = "08123"
     response = client.post("/api/pmb/register", json=register_data)
@@ -29,6 +33,8 @@ def test_register_invalid_reference(client, register_data):
     assert response.status_code == 400
 
 
+# >>> FOKUS PRESENTASI UTS <<<
+# Approval dua pendaftar memeriksa format NIM sekaligus kenaikan nomor urut untuk prodi yang sama.
 def test_approve_generates_sequential_nim(client, register_data):
     first = register(client, register_data)
     second_data = {**register_data, "nama_lengkap": "Budi Santoso", "email": "budi@example.com"}
@@ -46,6 +52,7 @@ def test_approve_generates_sequential_nim(client, register_data):
     assert int(nim2[-4:]) == int(nim1[-4:]) + 1
 
 
+# Approval berulang pada pendaftar yang sama harus mempertahankan NIM dan tidak menghabiskan counter tambahan.
 def test_approve_is_idempotent_and_does_not_consume_counter(client, register_data):
     first = register(client, register_data)
     approved1 = client.put(f"/api/pmb/{first['id']}/approve")
@@ -59,11 +66,13 @@ def test_approve_is_idempotent_and_does_not_consume_counter(client, register_dat
     assert int(approved_next.json()["nim"][-4:]) == int(approved1.json()["nim"][-4:]) + 1
 
 
+# ID pendaftar yang tidak ada menghasilkan HTTP 404.
 def test_approve_not_found(client):
     response = client.put("/api/pmb/999/approve")
     assert response.status_code == 404
 
 
+# Pendaftar yang sudah ditolak tidak dapat di-approve; status terminal tersebut menghasilkan konflik.
 def test_approve_rejected_candidate_conflict(client, register_data):
     candidate = register(client, register_data)
     rejected = client.put(f"/api/pmb/{candidate['id']}/reject")
@@ -81,6 +90,7 @@ def test_approve_invalid_program_code(client, db_session, register_data):
     assert response.status_code == 400
 
 
+# Pendaftar yang sudah di-approve tidak dapat ditolak kembali.
 def test_reject_approved_candidate_conflict(client, register_data):
     candidate = register(client, register_data)
     assert client.put(f"/api/pmb/{candidate['id']}/approve").status_code == 200
@@ -88,6 +98,7 @@ def test_reject_approved_candidate_conflict(client, register_data):
     assert response.status_code == 409
 
 
+# Endpoint status menampilkan keadaan pendaftaran yang tersimpan dan membedakan ID yang tidak ditemukan.
 def test_status_endpoint(client, register_data):
     candidate = register(client, register_data)
     response = client.get(f"/api/pmb/status/{candidate['id']}")
@@ -99,6 +110,7 @@ def test_status_not_found(client):
     assert client.get("/api/pmb/status/999").status_code == 404
 
 
+# Statistik mengagregasi jumlah pendaftar berdasarkan status dan program studi.
 def test_stats_grouped_counts(client, register_data):
     register(client, register_data)
     second = {**register_data, "email": "second@example.com", "jalur_masuk_id": 2}
@@ -111,6 +123,7 @@ def test_stats_grouped_counts(client, register_data):
     assert {item["nama"] for item in body["berdasarkan_program_studi"]} == {"Sistem Informasi", "Teknik Informatika"}
 
 
+# Batas nomor urut NIM 9999 harus dilaporkan sebagai konflik, bukan menghasilkan NIM di luar format.
 def test_approve_sequence_exhausted_returns_conflict(client, db_session, register_data):
     from datetime import datetime, timezone
     from app.models import NIMCounter

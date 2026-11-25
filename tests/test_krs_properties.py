@@ -1,3 +1,4 @@
+# Property-based testing memakai Hypothesis untuk menguji invariant KRS pada banyak input yang dihasilkan otomatis.
 from datetime import time
 from hypothesis import given, settings, strategies as st
 
@@ -6,6 +7,7 @@ from app.models import KRS, KRSStatus
 from app.services.krs_service import KRSForbidden, TransitionError
 
 
+# DummyCourse dan DummySession menyediakan objek minimum agar validator dapat diuji tanpa database nyata.
 class DummyCourse:
     def __init__(self, kode_mk, sks=1, hari=1, mulai=8, durasi=1):
         self.kode_mk = kode_mk
@@ -20,6 +22,8 @@ class DummySession:
     pass
 
 
+# >>> FOKUS PRESENTASI UTS <<<
+# Strategi ini menguji daftar SKS 1-4 dengan panjang hingga 40; invariant memastikan total yang diterima tidak melewati 24.
 @given(course_sks=st.lists(st.integers(min_value=1, max_value=4), max_size=40))
 @settings(max_examples=1000, deadline=None)
 def test_property_total_sks_never_exceeds_24_when_courses_are_added(course_sks):
@@ -37,6 +41,7 @@ def test_property_total_sks_never_exceeds_24_when_courses_are_added(course_sks):
         assert total <= MAX_SKS, "KRS menerima mata kuliah sehingga total SKS melewati 24."
 
 
+# Input jadwal bervariasi pada hari, jam mulai, dan durasi; oracle slot jam independen membandingkan hasil validator.
 @given(schedules=st.lists(
     st.tuples(st.integers(1, 3), st.integers(8, 17), st.integers(1, 3)),
     max_size=20,
@@ -70,6 +75,7 @@ LEGAL_TRANSITIONS = {
 }
 
 
+# Status dan aktor diambil dari himpunan nilai yang ditentukan; hanya empat transisi bisnis yang boleh berhasil.
 @given(source=st.sampled_from([s.value for s in KRSStatus]),
        target=st.sampled_from([s.value for s in KRSStatus]),
        actor=st.sampled_from(["mahasiswa", "dosen_pa"]))
