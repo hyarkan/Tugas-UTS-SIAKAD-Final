@@ -7,9 +7,11 @@ from app.schemas.krs import (AddCourseRequest, KRSDetailResponse, KRSResponse,
     KRSValidationResponse, SubmitKRSRequest, ApproveKRSRequest, ReviseKRSRequest)
 from app.services.krs_service import (KRSError, KRSManager)
 
+# Router ini menjadi lapisan HTTP untuk alur KRS: memeriksa request, memanggil KRSManager, dan mengubah hasil ke response.
 router = APIRouter(prefix="/api/krs", tags=["KRS"])
 
 
+# Header peran dan NIM adalah pemeriksaan demo, bukan autentikasi production; NIM aktor harus sama dengan pemilik pada path.
 def _require_student(role: str | None, actor_nim: str | None, nim: str) -> None:
     if role != "mahasiswa":
         raise HTTPException(status_code=403, detail="Aksi ini hanya dapat dilakukan oleh mahasiswa.")
@@ -17,12 +19,14 @@ def _require_student(role: str | None, actor_nim: str | None, nim: str) -> None:
         raise HTTPException(status_code=403, detail="Mahasiswa hanya boleh mengakses dan mengubah KRS miliknya sendiri.")
 
 
+# Kesalahan domain KRSError diterjemahkan ke HTTP status milik service; exception lain tetap diteruskan.
 def _raise_http(exc: Exception):
     if isinstance(exc, KRSError):
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
     raise exc
 
 
+# Penambahan memeriksa aktor dan format semester di router, lalu aturan bisnis mata kuliah dijalankan oleh KRSManager.
 @router.post("/{nim}/{semester}/courses", response_model=KRSDetailResponse, status_code=201,
              summary="Menambahkan mata kuliah ke KRS milik mahasiswa")
 def add_course_endpoint(nim: str, semester: str, payload: AddCourseRequest,
@@ -37,6 +41,7 @@ def add_course_endpoint(nim: str, semester: str, payload: AddCourseRequest,
         _raise_http(exc)
 
 
+# Penghapusan mata kuliah tetap dibatasi ke mahasiswa pemilik dan diteruskan ke service untuk pemeriksaan status KRS.
 @router.delete("/{nim}/{semester}/courses/{kode_mk}", status_code=204,
                summary="Menghapus mata kuliah dari KRS milik mahasiswa")
 def remove_course_endpoint(nim: str, semester: str, kode_mk: str,
@@ -50,6 +55,7 @@ def remove_course_endpoint(nim: str, semester: str, kode_mk: str,
         _raise_http(exc)
 
 
+# Validasi mengembalikan daftar kesalahan tanpa mengubah status KRS; route ini tidak memanggil pemeriksaan aktor.
 @router.get("/{nim}/{semester}/validate", response_model=KRSValidationResponse)
 def validate_krs_endpoint(nim: str, semester: str, db: Session = Depends(get_db)):
     try:
@@ -59,6 +65,8 @@ def validate_krs_endpoint(nim: str, semester: str, db: Session = Depends(get_db)
         _raise_http(exc)
 
 
+# >>> FOKUS PRESENTASI UTS <<<
+# Submit membawa version yang dilihat mahasiswa agar KRSManager dapat menolak perubahan yang sudah kedaluwarsa.
 @router.post("/{nim}/{semester}/submit", response_model=KRSResponse, summary="Mahasiswa mengajukan KRS")
 def submit_krs_endpoint(nim: str, semester: str, payload: SubmitKRSRequest,
     x_actor_role: str | None = Header(default=None), x_actor_nim: str | None = Header(default=None),
@@ -71,6 +79,7 @@ def submit_krs_endpoint(nim: str, semester: str, payload: SubmitKRSRequest,
         _raise_http(exc)
 
 
+# Approval memeriksa role dan kecocokan ID aktor dengan dosen_pa_id payload sebelum meminta transisi pada KRSManager.
 @router.post("/{nim}/{semester}/approve", response_model=KRSResponse, summary="Dosen PA menyetujui KRS")
 def approve_krs_endpoint(nim: str, semester: str, payload: ApproveKRSRequest,
     x_actor_role: str | None = Header(default=None), x_actor_id: int | None = Header(default=None),
@@ -84,6 +93,7 @@ def approve_krs_endpoint(nim: str, semester: str, payload: ApproveKRSRequest,
         _raise_http(exc)
 
 
+# Permintaan revisi juga memeriksa identitas dosen PA, lalu meneruskan version dan catatan revisi ke service.
 @router.post("/{nim}/{semester}/revise", response_model=KRSResponse, summary="Dosen PA meminta revisi KRS")
 def revise_krs_endpoint(nim: str, semester: str, payload: ReviseKRSRequest,
     x_actor_role: str | None = Header(default=None), x_actor_id: int | None = Header(default=None),
@@ -97,6 +107,7 @@ def revise_krs_endpoint(nim: str, semester: str, payload: ReviseKRSRequest,
         _raise_http(exc)
 
 
+# Response merangkum detail mata kuliah, total SKS, status, version, waktu pengajuan, dan catatan revisi.
 def _serialize_krs(db: Session, krs: KRS):
     rows = db.execute(select(MataKuliah.nama, MataKuliah.sks)
         .join(KRSDetail, KRSDetail.kode_mk == MataKuliah.kode_mk)
@@ -110,6 +121,7 @@ def _serialize_krs(db: Session, krs: KRS):
         "revision_note": krs.revision_note}
 
 
+# Endpoint baca mencari KRS berdasarkan NIM dan semester; implementasi route ini tidak memanggil _require_student.
 @router.get("/{nim}/{semester}", response_model=KRSResponse, summary="Melihat KRS mahasiswa")
 def get_krs_endpoint(nim: str, semester: str, db: Session = Depends(get_db)):
     krs = db.scalar(select(KRS).where(KRS.nim == nim, KRS.semester == semester))
