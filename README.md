@@ -260,7 +260,7 @@ Dokumen ini disiapkan sebagai halaman depan repository untuk memudahkan dosen me
 | Komponen | Tautan / status | Keterangan |
 |---|---|---|
 | **1. Laporan Final UML (PDF)** | **[Buka laporan PDF](artifacts/final_uts/LAPORAN_UML_FINAL_UTS_SIAKAD.pdf)** | Laporan 16 halaman mencakup PMB, KRS, timeline, perancangan empat diagram UML, dan pembahasan implementasi. |
-| **2. Video penjelasan YouTube** | **Belum ditambahkan** | Tautan diisi setelah rekaman, penyuntingan, dan publikasi video. |
+| **2. Video penjelasan YouTube** | [Tonton Video YouTube](https://youtu.be/-Gj8sgZUc9o) | Video presentasi dan demonstrasi Final UTS SIAKAD yang mencakup proses perancangan UML, implementasi modul PMB dan KRS, serta pengujian sistem. |
 | **3. Repository GitHub Final UTS** | [Buka Repository GitHub](https://github.com/hyarkan/Tugas-UTS-SIAKAD-Final) | Repository resmi proyek Final UTS SIAKAD yang telah dipublikasikan, berisi kode, diagram UML, dokumentasi, dan riwayat pengembangan. |
 
 **Dokumentasi tambahan:** [ADR PDF (5 halaman)](artifacts/final_uts/ADR_FINAL_UTS_SIAKAD.pdf) · [ADR Markdown](docs/uml_final_uts/ADR_FINAL_UTS.md) · [AI Usage Log UTS](docs/uml_final_uts/AI_USAGE_LOG_FINAL_UTS.md) · [Penjelasan UML](docs/uml_final_uts/PENJELASAN_UML_FINAL_UTS.md).
@@ -269,4 +269,4 @@ Dokumen ini disiapkan sebagai halaman depan repository untuk memudahkan dosen me
 
 ---
 
-**Status dokumen:** README utama Final UTS SIAKAD. Laporan UML terdiri atas 16 halaman dan ADR terdiri atas 5 halaman. Repository GitHub telah dipublikasikan. Tautan YouTube akan ditambahkan setelah video dipublikasikan. Dokumentasi Minggu 1–12 tetap dipertahankan sebagai riwayat pengembangan.
+**Status dokumen:** README utama Final UTS SIAKAD. Laporan UML terdiri atas 16 halaman dan ADR terdiri atas 5 halaman. Repository GitHub telah dipublikasikan. Video presentasi Final UTS telah dipublikasikan melalui YouTube. Dokumentasi Minggu 1–12 tetap dipertahankan sebagai riwayat pengembangan.
